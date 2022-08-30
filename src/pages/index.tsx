@@ -6,7 +6,7 @@ import { trpc } from "../utils/trpc";
 
 type TodoCardProps = {
   todo: Todo;
-  // handleClick: Function;
+  handleClick: Function;
 };
 
 // const TodoArray: Array<Todo> = [
@@ -22,20 +22,23 @@ type TodoCardProps = {
 const Home: NextPage = () => {
   // const TodoArray =  ?? [];
   // console.log(TodoArray);
+
+  const utils = trpc.useContext();
   const todosQuery = trpc.useQuery(["todo.getAll"]);
+  const setIsComplete = trpc.useMutation("todo.setIsComplete", {
+    async onSuccess() {
+      await utils.invalidateQueries(["todo.getAll"]);
+    },
+  });
   console.log("todos data is", todosQuery.data);
   // const [todos, setTodos] = useState(todosData ? [...todosData] : []);
 
-  // const toggleTodo = (atIndex: number) => {
-  //   setTodos(
-  //     todos!.map((todo, index) =>
-  //       // Here you accept a id argument to the function and replace it with hard coded 🤪 2, to make it dynamic.
-  //       index === atIndex - 1
-  //         ? { ...todo, isComplete: !todo.isComplete }
-  //         : { ...todo }
-  //     )
-  //   );
-  // };
+  const toggleTodo = (atIndex: number, newValue: boolean) => {
+    setIsComplete.mutate({
+      id: atIndex,
+      isComplete: newValue,
+    });
+  };
 
   return (
     <>
@@ -53,7 +56,9 @@ const Home: NextPage = () => {
               <TodoCard
                 todo={todoItem}
                 key={todoItem.id}
-                // handleClick={() => toggleTodo(todoItem.id)}
+                handleClick={() => {
+                  toggleTodo(todoItem.id, !todoItem.isComplete);
+                }}
               />
               // </div>
             );
@@ -66,12 +71,12 @@ const Home: NextPage = () => {
   );
 };
 
-const TodoCard = ({ todo }: TodoCardProps) => {
+const TodoCard = ({ todo, handleClick }: TodoCardProps) => {
   //, handleClick
   return (
     <section
       className="flex flex-row justify-between items-center w-96 p-6 duration-500 border-2 border-gray-500 rounded shadow-xl motion-safe:hover:scale-105"
-      // onClick={() => handleClick()}
+      onClick={() => handleClick()}
     >
       <h2 className="text-lg text-gray-700">{todo.description}</h2>
       <p className="text-sm text-gray-600">

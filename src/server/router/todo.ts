@@ -1,5 +1,6 @@
 import { createRouter } from "./context";
 import { z } from "zod";
+import { prisma } from "../db/client";
 
 export const todoRouter = createRouter()
   .query("hello", {
@@ -16,6 +17,21 @@ export const todoRouter = createRouter()
   })
   .query("getAll", {
     async resolve({ ctx }) {
-      return await ctx.prisma.todo.findMany();
+      return await prisma.todo.findMany();
+    },
+  })
+  .mutation("setIsComplete", {
+    // validate input with Zod
+    input: z.object({ id: z.number(), isComplete: z.boolean() }),
+    async resolve({ input }) {
+      // use your ORM of choice
+      return await prisma.todo.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          isComplete: input.isComplete,
+        },
+      });
     },
   });
