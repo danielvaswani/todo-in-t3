@@ -6,7 +6,8 @@ import { trpc } from "../utils/trpc";
 
 type TodoCardProps = {
   todo: Todo;
-  handleClick: Function;
+  handleToggle: Function;
+  handleDelete: Function;
 };
 
 // const TodoArray: Array<Todo> = [
@@ -30,7 +31,13 @@ const Home: NextPage = () => {
       await utils.invalidateQueries(["todo.getAll"]);
     },
   });
-  console.log("todos data is", todosQuery.data);
+  const deleteTodoQuery = trpc.useMutation("todo.delete", {
+    async onSuccess() {
+      await utils.invalidateQueries(["todo.getAll"]);
+    },
+  });
+
+  // console.log("todos data is", todosQuery.data);
   // const [todos, setTodos] = useState(todosData ? [...todosData] : []);
 
   const toggleTodo = (atIndex: number, newValue: boolean) => {
@@ -38,6 +45,12 @@ const Home: NextPage = () => {
       id: atIndex,
       isComplete: newValue,
     });
+    console.log("toggled todo");
+  };
+
+  const deleteTodo = (atIndex: number) => {
+    deleteTodoQuery.mutate({ id: atIndex });
+    console.log("deleted todo");
   };
 
   return (
@@ -56,8 +69,11 @@ const Home: NextPage = () => {
               <TodoCard
                 todo={todoItem}
                 key={todoItem.id}
-                handleClick={() => {
+                handleToggle={() => {
                   toggleTodo(todoItem.id, !todoItem.isComplete);
+                }}
+                handleDelete={() => {
+                  deleteTodo(todoItem.id);
                 }}
               />
               // </div>
@@ -71,13 +87,22 @@ const Home: NextPage = () => {
   );
 };
 
-const TodoCard = ({ todo, handleClick }: TodoCardProps) => {
+const TodoCard = ({ todo, handleToggle, handleDelete }: TodoCardProps) => {
   //, handleClick
   return (
     <section
-      className="flex flex-row justify-between items-center w-96 p-6 duration-500 border-2 border-gray-500 rounded shadow-xl motion-safe:hover:scale-105"
-      onClick={() => handleClick()}
+      className="flex flex-row justify-between items-center w-96 p-6 duration-500 border-2 border-gray-500 relative rounded shadow-xl motion-safe:hover:scale-105"
+      onClick={() => handleToggle()}
     >
+      <p
+        className="w-4 h-4 bg-red-600 text-white z-0 flex items-center justify-center rounded -m-1.5 absolute top-0 right-0 motion-safe:hover:scale-[2]"
+        onClick={(e) => {
+          handleDelete();
+          e.stopPropagation();
+        }}
+      >
+        X
+      </p>
       <h2 className="text-lg text-gray-700">{todo.description}</h2>
       <p className="text-sm text-gray-600">
         is complete: {todo.isComplete ? "true" : "false"}
