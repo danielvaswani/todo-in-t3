@@ -2,6 +2,7 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import { trpc } from "../utils/trpc";
 import TodoCard from "../components/TodoCard/TodoCard";
+import { InputHTMLAttributes, useState } from "react";
 
 // const TodoArray: Array<Todo> = [
 //   { description: "Do chores", isComplete: false },
@@ -30,6 +31,14 @@ const Home: NextPage = () => {
     },
   });
 
+  const addTodoQuery = trpc.useMutation("todo.add", {
+    async onSuccess() {
+      await utils.invalidateQueries(["todo.getAll"]);
+    },
+  });
+
+  const [inputText, setInputText] = useState("");
+
   // console.log("todos data is", todosQuery.data);
   // const [todos, setTodos] = useState(todosData ? [...todosData] : []);
 
@@ -44,6 +53,24 @@ const Home: NextPage = () => {
   const deleteTodo = (atIndex: number) => {
     deleteTodoQuery.mutate({ id: atIndex });
     console.log("deleted todo");
+  };
+
+  const updateInputText = (description: string) => {
+    setInputText(description);
+  };
+
+  const addTodo = () => {
+    addTodoQuery.mutate(inputText);
+    console.log("todo " + inputText + " added");
+  };
+
+  const handleSubmit = (event: React.SyntheticEvent) => {
+    // 👇️ prevent page refresh
+    event.preventDefault();
+    addTodo();
+    setInputText("");
+    const inputText: HTMLInputElement = document.querySelector("#inputText")!;
+    inputText.value = "";
   };
 
   return (
@@ -75,6 +102,25 @@ const Home: NextPage = () => {
         ) : (
           <></>
         )}
+        <form
+          className="flex flex-row gap-2 items-center"
+          onSubmit={handleSubmit}
+        >
+          <label htmlFor="description">Add Todo</label>
+          <input
+            type="text"
+            name="description"
+            id="inputText"
+            onChange={(event) => updateInputText(event.target.value)}
+            className="rounded px-1 border-2 border-gray-500"
+          />
+          <button
+            type="submit"
+            className="rounded px-1 border-2 border-gray-500"
+          >
+            Submit
+          </button>
+        </form>
       </main>
     </>
   );
