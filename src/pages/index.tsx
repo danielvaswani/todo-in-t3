@@ -58,22 +58,24 @@ const Home: NextPage = () => {
 
       <main className="container mx-auto flex select-none flex-col gap-2 items-center justify-center min-h-screen p-4">
         {todosQuery.data ? (
-          todosQuery.data.map((todoItem) => {
-            return (
-              // <div onClick={() => toggleTodo(index)}>
-              <TodoCard
-                todo={todoItem}
-                key={todoItem.id}
-                handleToggle={() => {
-                  toggleTodo(todoItem.id, !todoItem.isComplete);
-                }}
-                handleDelete={() => {
-                  deleteTodo(todoItem.id);
-                }}
-              />
-              // </div>
-            );
-          })
+          todosQuery.data
+            .sort((t1, t2) => t1.id - t2.id)
+            .map((todoItem) => {
+              return (
+                // <div onClick={() => toggleTodo(index)}>
+                <TodoCard
+                  todo={todoItem}
+                  key={todoItem.id}
+                  handleToggle={() => {
+                    toggleTodo(todoItem.id, !todoItem.isComplete);
+                  }}
+                  handleDelete={() => {
+                    deleteTodo(todoItem.id);
+                  }}
+                />
+                // </div>
+              );
+            })
         ) : (
           <></>
         )}

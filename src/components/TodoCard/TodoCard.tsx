@@ -2,8 +2,8 @@ import { Todo } from "@prisma/client";
 
 type TodoCardProps = {
   todo: Todo;
-  handleToggle: Function;
-  handleDelete: Function;
+  handleToggle: () => void;
+  handleDelete: () => void;
 };
 
 const TodoCard = ({ todo, handleToggle, handleDelete }: TodoCardProps) => {
