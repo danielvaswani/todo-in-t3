@@ -1,6 +1,5 @@
 import { Todo } from "@prisma/client";
 import { useState } from "react";
-import { util } from "zod/lib/helpers/util";
 import { trpc } from "../utils/trpc";
 
 type TodoCardProps = {
@@ -25,7 +24,9 @@ const TodoCard = ({
     <section
       className={`${
         showTodo ? "flex" : "hidden"
-      } flex-row justify-between items-center w-96 p-6 duration-500 border-2 border-gray-500 relative rounded shadow-xl motion-safe:hover:scale-105`}
+      } flex-row justify-between items-center w-96 p-6 duration-500 ${
+        todo.isComplete ? "bg-blue-100" : "bg-white"
+      } border-2 border-gray-500 relative rounded shadow-xl motion-safe:hover:scale-105 hover:border-blue-500`}
       onClick={() => {
         handleToggle();
         // moveUpQuery.mutate({ id: todo.id, pos: todo.pos, newPos: 1 });
@@ -33,8 +34,9 @@ const TodoCard = ({
       }}
       draggable={true}
       onDragStart={() => handleMove(todo.pos, todo.id)}
+      onDragEnd={(e) => e.preventDefault()}
     >
-      <p
+      <div
         className="w-4 h-4 bg-red-600 text-white z-0 flex items-center justify-center rounded -m-1.5 absolute top-0 right-0 motion-safe:hover:scale-[2]"
         onClick={(e) => {
           setShowTodo(!showTodo);
@@ -43,10 +45,15 @@ const TodoCard = ({
         }}
       >
         X
-      </p>
-      <h2 className="text-lg text-gray-700">{todo.description}</h2>
-      <p className="text-sm text-gray-600">
-        is complete: {todo.isComplete ? "true" : "false"}
+      </div>
+      <p
+        className="text-gray-70 w-full break-words"
+        style={{
+          fontSize:
+            todo.description.length > 25 ? 35 - todo.description.length : 25,
+        }}
+      >
+        {todo.description}
       </p>
     </section>
   );
