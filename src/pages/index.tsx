@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import { trpc } from "../utils/trpc";
-import TodoCard from "../components/TodoCard/TodoCard";
+import TodoCard from "../components/TodoCard";
 import AddTodoForm from "../components/AddTodoForm";
 import { useState } from "react";
 
@@ -33,9 +33,23 @@ const Home: NextPage = () => {
     },
   });
 
+  const moveDownQuery = trpc.useMutation("todo.moveDown", {
+    async onSuccess() {
+      await utils.invalidateQueries(["todo.getAll"]);
+    },
+  });
+
+  const moveUpQuery = trpc.useMutation("todo.moveUp", {
+    async onSuccess() {
+      await utils.invalidateQueries(["todo.getAll"]);
+    },
+  });
+
   // console.log("todos data is", todosQuery.data);
   // const [todos, setTodos] = useState(todosData ? [...todosData] : []);
   const [currentLine, setCurrentLine] = useState(-1);
+  const [movePos, setMovePos] = useState(0);
+  const [currentId, setCurrentId] = useState(0);
 
   const toggleTodo = (atIndex: number, newValue: boolean) => {
     setIsComplete.mutate({
@@ -45,15 +59,34 @@ const Home: NextPage = () => {
     console.log("toggled todo");
   };
 
-  const deleteTodo = (atIndex: number) => {
-    deleteTodoQuery.mutate({ id: atIndex });
+  const deleteTodo = (id: number, pos: number) => {
+    deleteTodoQuery.mutate({ id: id, pos: pos });
     console.log("deleted todo");
+  };
+
+  const movePosToLine = (id: number, from: number, toLine: number) => {
+    if (from === toLine || from === toLine + 1) return;
+    let toPos = toLine;
+    if (from > toLine) {
+      //moveUp toLine + 1
+      toPos += 1;
+      moveUpQuery.mutate({ id: id, pos: from, newPos: toPos });
+    } else {
+      //moveDown toLine
+      moveDownQuery.mutate({ id: id, pos: from, newPos: toPos });
+    }
+    console.log("Moving pos " + from + " to pos " + toPos);
   };
 
   return (
     <main
       className="container mx-auto flex select-none flex-col items-center justify-center min-h-screen"
-      onDragEnd={() => setCurrentLine(-1)}
+      onDragEnd={() => {
+        movePosToLine(currentId, movePos, currentLine);
+        setCurrentId(-1);
+        setCurrentLine(-1);
+        setMovePos(-1);
+      }}
     >
       {todosQuery.data && (
         <>
@@ -79,7 +112,11 @@ const Home: NextPage = () => {
                       toggleTodo(todoItem.id, !todoItem.isComplete);
                     }}
                     handleDelete={() => {
-                      deleteTodo(todoItem.id);
+                      deleteTodo(todoItem.id, todoItem.pos);
+                    }}
+                    handleMove={(pos, id) => {
+                      setMovePos(pos);
+                      setCurrentId(id);
                     }}
                   />
                 </>
@@ -103,7 +140,7 @@ const Home: NextPage = () => {
           ></div>
         </div>
       )}
-      <AddTodoForm />
+      <AddTodoForm index={todosQuery.data ? todosQuery.data.length + 1 : 1} />
     </main>
   );
 };

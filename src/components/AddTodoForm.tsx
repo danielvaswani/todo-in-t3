@@ -1,6 +1,10 @@
 import { trpc } from "../utils/trpc";
 
-const AddTodoForm = () => {
+type AddTodoFormProps = {
+  index: number;
+};
+
+const AddTodoForm = ({ index }: AddTodoFormProps) => {
   const utils = trpc.useContext();
 
   const handleSubmit = (event: React.SyntheticEvent) => {
@@ -19,7 +23,7 @@ const AddTodoForm = () => {
   });
 
   const addTodo = (description: string) => {
-    addTodoQuery.mutate(description);
+    addTodoQuery.mutate({ description: description, pos: index });
     console.log("todo " + description + " added");
   };
 

@@ -36,20 +36,38 @@ export const todoRouter = createRouter()
     },
   })
   .mutation("delete", {
-    input: z.object({ id: z.number() }),
+    input: z.object({ id: z.number(), pos: z.number() }),
     async resolve({ input }) {
-      return await prisma.todo.delete({
-        where: {
-          id: input.id,
-        },
-      });
+      return await prisma.$transaction([
+        prisma.todo.delete({
+          where: {
+            id: input.id,
+          },
+        }),
+        prisma.todo.updateMany({
+          where: {
+            pos: {
+              gt: input.pos,
+            },
+          },
+          data: {
+            pos: {
+              decrement: 1,
+            },
+          },
+        }),
+      ]);
     },
   })
   .mutation("add", {
-    input: z.string(),
+    input: z.object({ description: z.string(), pos: z.number() }),
     async resolve({ input }) {
       return await prisma.todo.create({
-        data: { description: input, isComplete: false },
+        data: {
+          description: input.description,
+          pos: input.pos,
+          isComplete: false,
+        },
       });
     },
   })
