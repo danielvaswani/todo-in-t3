@@ -14,4 +14,5 @@ model Todo {
     id          Int     @id @default(autoincrement())
     description String
     isComplete  Boolean
+    pos         Int     @default(autoincrement())
 }
