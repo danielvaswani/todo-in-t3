@@ -98,6 +98,8 @@ const Home: NextPage = () => {
                   <div
                     className="w-96 h-6 flex justify-center items-center  hover:border-red-600 motion-safe:hover:scale-105"
                     onDragEnter={() => setCurrentLine(index)}
+                    onDrop={(e) => e.preventDefault()}
+                    onDragOver={(e) => e.preventDefault()}
                   >
                     <div
                       className={`w-64 h-px motion-safe:hover:scale-105  ${
@@ -130,6 +132,7 @@ const Home: NextPage = () => {
         <div
           className="w-96 h-6 flex justify-center items-center  hover:border-red-600 motion-safe:hover:scale-105"
           onDragEnter={() => setCurrentLine(todosQuery.data.length)}
+          onDragOver={(e) => e.preventDefault()}
         >
           <div
             className={`w-64 h-px motion-safe:hover:scale-105  ${

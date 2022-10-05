@@ -34,7 +34,6 @@ const TodoCard = ({
       }}
       draggable={true}
       onDragStart={() => handleMove(todo.pos, todo.id)}
-      onDragEnd={(e) => e.preventDefault()}
     >
       <div
         className="w-4 h-4 bg-red-600 text-white z-0 flex items-center justify-center rounded -m-1.5 absolute top-0 right-0 motion-safe:hover:scale-[2]"
