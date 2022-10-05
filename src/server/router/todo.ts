@@ -1,5 +1,5 @@
 import { createRouter } from "./context";
-import { z, ZodString } from "zod";
+import { z } from "zod";
 import { prisma } from "../db/client";
 
 export const todoRouter = createRouter()
@@ -16,7 +16,7 @@ export const todoRouter = createRouter()
     },
   })
   .query("getAll", {
-    async resolve({ ctx }) {
+    async resolve() {
       return await prisma.todo.findMany();
     },
   })
