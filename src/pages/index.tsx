@@ -106,7 +106,7 @@ const Home: NextPage = () => {
       // Optimistically update to the new value
 
       utils.setQueryData(["todo.getAll"], (old) => {
-        let newData = old!
+        const newData = old!
           .map((oldItem) => {
             if (oldItem.pos > movement.pos && oldItem.pos <= movement.newPos) {
               oldItem.pos -= 1;
@@ -153,7 +153,7 @@ const Home: NextPage = () => {
       // Optimistically update to the new value
 
       utils.setQueryData(["todo.getAll"], (old) => {
-        let newData = old!
+        const newData = old!
           .map((oldItem) => {
             /*
              gte: input.newPos,
