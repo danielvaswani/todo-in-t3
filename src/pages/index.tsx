@@ -23,25 +23,172 @@ const Home: NextPage = () => {
   const todosQuery = trpc.useQuery(["todo.getAll"]);
 
   const setIsComplete = trpc.useMutation("todo.setIsComplete", {
-    async onSuccess() {
-      await utils.invalidateQueries(["todo.getAll"]);
+    onMutate: async (newTodo) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+
+      await utils.cancelQuery(["todo.getAll"]);
+
+      // Snapshot the previous value
+
+      const previousTodos = utils.getQueryData(["todo.getAll"]);
+
+      // Optimistically update to the new value
+
+      utils.setQueryData(
+        ["todo.getAll"],
+        previousTodos!.map((item) => {
+          if (item.id === newTodo.id) item.isComplete = !item.isComplete;
+          return item;
+        })
+      );
+
+      // Return a context with the previous and new todo
+
+      return { previousTodos };
+    },
+
+    // If the mutation fails, use the context we returned above
+
+    onError: (_err, _newTodo, context) => {
+      utils.setQueryData(["todo.getAll"], context!.previousTodos!);
+    },
+
+    // Always refetch after error or success:
+    onSettled: () => {
+      utils.invalidateQueries("todo.getAll");
     },
   });
+
   const deleteTodoQuery = trpc.useMutation("todo.delete", {
-    async onSuccess() {
-      await utils.invalidateQueries(["todo.getAll"]);
+    onMutate: async (deleteTodo) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+
+      await utils.cancelQuery(["todo.getAll"]);
+
+      // Snapshot the previous value
+
+      const previousTodos = utils.getQueryData(["todo.getAll"]);
+
+      // Optimistically update to the new value
+
+      utils.setQueryData(
+        ["todo.getAll"],
+        previousTodos!.filter((item) => item.id !== deleteTodo.id)
+      );
+
+      // Return a context object with the snapshotted value
+
+      return { previousTodos };
+    },
+
+    // If the mutation fails, use the context returned from onMutate to roll back
+
+    onError: (_err, _newTodo, context) => {
+      utils.setQueryData(["todo.getAll"], context!.previousTodos!);
+    },
+
+    // Always refetch after error or success:
+
+    onSettled: () => {
+      utils.invalidateQueries("todo.getAll");
     },
   });
 
   const moveDownQuery = trpc.useMutation("todo.moveDown", {
-    async onSuccess() {
-      await utils.invalidateQueries(["todo.getAll"]);
+    onMutate: async (movement) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+
+      await utils.cancelQuery(["todo.getAll"]);
+
+      // Snapshot the previous value
+
+      const previousTodos = utils.getQueryData(["todo.getAll"]);
+
+      // Optimistically update to the new value
+
+      utils.setQueryData(["todo.getAll"], (old) => {
+        let newData = old!
+          .map((oldItem) => {
+            if (oldItem.pos > movement.pos && oldItem.pos <= movement.newPos) {
+              oldItem.pos -= 1;
+            }
+            return oldItem;
+          })
+          .map((oldItem) => {
+            if (oldItem.id === movement.id) {
+              oldItem.pos = movement.newPos;
+            }
+            return oldItem;
+          });
+        return newData;
+      });
+
+      // Return a context object with the snapshotted value
+
+      return { previousTodos };
+    },
+
+    // If the mutation fails, use the context returned from onMutate to roll back
+
+    onError: (_err, _newTodo, context) => {
+      utils.setQueryData(["todo.getAll"], context!.previousTodos!);
+    },
+
+    // Always refetch after error or success:
+
+    onSettled: () => {
+      utils.invalidateQueries("todo.getAll");
     },
   });
 
   const moveUpQuery = trpc.useMutation("todo.moveUp", {
-    async onSuccess() {
-      await utils.invalidateQueries(["todo.getAll"]);
+    onMutate: async (movement) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+
+      await utils.cancelQuery(["todo.getAll"]);
+
+      // Snapshot the previous value
+
+      const previousTodos = utils.getQueryData(["todo.getAll"]);
+
+      // Optimistically update to the new value
+
+      utils.setQueryData(["todo.getAll"], (old) => {
+        let newData = old!
+          .map((oldItem) => {
+            /*
+             gte: input.newPos,
+              lt: input.pos,
+            */
+            if (oldItem.pos >= movement.newPos && oldItem.pos < movement.pos) {
+              oldItem.pos += 1;
+            }
+            return oldItem;
+          })
+          .map((oldItem) => {
+            if (oldItem.id === movement.id) {
+              oldItem.pos = movement.newPos;
+            }
+            return oldItem;
+          });
+        return newData;
+      });
+
+      // Return a context object with the snapshotted value
+
+      return { previousTodos };
+    },
+
+    // If the mutation fails, use the context returned from onMutate to roll back
+
+    onError: (_err, _newTodo, context) => {
+      utils.setQueryData(["todo.getAll"], context!.previousTodos!);
+    },
+
+    // Always refetch after error or success:
+
+    onSettled: () => {
+      utils.invalidateQueries("todo.getAll");
     },
   });
 

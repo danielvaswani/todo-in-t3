@@ -17,8 +17,34 @@ const AddTodoForm = ({ index }: AddTodoFormProps) => {
   };
 
   const addTodoQuery = trpc.useMutation("todo.add", {
-    async onSuccess() {
-      await utils.invalidateQueries(["todo.getAll"]);
+    onMutate: async (newTodo) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+
+      await utils.cancelQuery(["todo.getAll"]);
+
+      // Snapshot the previous value
+
+      const previousTodos = utils.getQueryData(["todo.getAll"]);
+
+      // Optimistically update to the new value
+
+      utils.setQueryData(["todo.getAll"], (old) => [...(old as any), newTodo]);
+
+      // Return a context object with the snapshotted value
+
+      return { previousTodos };
+    },
+
+    // If the mutation fails, use the context returned from onMutate to roll back
+
+    onError: (_err, _newTodo, context) => {
+      utils.setQueryData(["todo.getAll"], context!.previousTodos!);
+    },
+
+    // Always refetch after error or success:
+
+    onSettled: () => {
+      utils.invalidateQueries("todo.getAll");
     },
   });
 
